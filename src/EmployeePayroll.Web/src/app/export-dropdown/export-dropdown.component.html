@@ -1,0 +1,10 @@
+<div class="export-dropdown btn-group" [class.disabled]="disabled">
+  <button type="button" class="btn btn-success" [disabled]="disabled">
+    Export
+  </button>
+  <div class="dropdown-menu dropdown-menu-end shadow-sm">
+    <button type="button" class="dropdown-item" [disabled]="disabled || !canExport" (click)="exportPdf()">PDF</button>
+    <button type="button" class="dropdown-item" [disabled]="disabled" (click)="exportExcel()">Excel</button>
+    <button type="button" class="dropdown-item" [disabled]="disabled || !canExport" (click)="exportWord()">Word</button>
+  </div>
+</div>

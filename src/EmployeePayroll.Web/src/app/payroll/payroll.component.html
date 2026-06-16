@@ -1,0 +1,180 @@
+<div class=" justify-content-between align-items-start gap-10 mb-10 mt-10">
+  <h1 class="h3 mb-0 text-center fw-bold">Salary Sheet</h1>
+  <!-- <div class="d-flex flex-column align-items-stretch align-items-md-end gap-2 ms-md-auto text-md-end w-100 w-md-auto"> -->
+    <div class="d-flex flex-wrap gap-2 justify-content-stretch justify-content-md-end">
+      <button type="button" class="btn btn-outline-secondary" [disabled]="busy" (click)="load()" title="Reload">Reload</button>
+      <button type="button" class="btn btn-outline-dark border-warning" [disabled]="busy" (click)="openFilterPanel()" title="Filters">
+        <span class="fw-semibold">&#9881;</span> Filter
+      </button>
+      <button type="button" class="btn btn-primary" [disabled]="busy" (click)="openPeriodPanel()">Pay period</button>
+      <app-export-dropdown
+        [disabled]="busy"
+        [canExport]="rows.length > 0"
+        tableSelector="#salarySheetTable"
+        [fileBaseName]="'Salary_Sheet_' + month + '_' + year"
+        title="Salary Sheet"
+        (excel)="export()"
+      />
+    </div>
+    <div class="small text-muted border-start border-warning border-3 ps-2 text-start text-md-end">
+      <div><strong>Period:</strong> {{ periodLabel }}</div>
+      <div>
+        Page size {{ pageSize }} · {{ totalCount }} row(s)
+        <span *ngIf="totalCount > 20"> · Page {{ page }} / {{ totalPages || 1 }}</span>
+      </div>
+    </div>
+  <!-- </div> -->
+</div>
+
+
+<div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+<div *ngIf="info" class="alert alert-info">{{ info }}</div>
+
+<div class="modal-backdrop fade payroll-blur-backdrop" [class.show]="periodOpen" *ngIf="periodOpen" (click)="closePeriodPanel()"></div>
+<div
+  class="modal fade payroll-modal-layer"
+  [class.show]="periodOpen"
+  [style.display]="periodOpen ? 'block' : 'none'"
+  tabindex="-1"
+  role="dialog"
+  (click)="closePeriodPanel()"
+>
+  <div class="modal-dialog modal-dialog-centered" role="document" (click)="$event.stopPropagation()">
+    <div class="modal-content border border-warning border-2">
+      <div class="modal-header">
+        <h5 class="modal-title">Pay period</h5>
+        <button type="button" class="btn-close" aria-label="Close" (click)="closePeriodPanel()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Month</label>
+          <select class="form-select" [(ngModel)]="draftMonth">
+            <option *ngFor="let m of monthNames; let i = index" [ngValue]="i + 1">{{ m }}</option>
+          </select>
+        </div>
+        <div class="mb-0">
+          <label class="form-label">Year</label>
+          <select class="form-select" [(ngModel)]="draftYear">
+            <option *ngFor="let y of yearOptions" [ngValue]="y">{{ y }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closePeriodPanel()">Cancel</button>
+        <button type="button" class="btn btn-primary" [disabled]="busy" (click)="applyPeriodPanel()">Load payroll</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop fade payroll-blur-backdrop" [class.show]="filterOpen" *ngIf="filterOpen" (click)="closeFilterPanel()"></div>
+<div
+  class="modal fade payroll-modal-layer"
+  [class.show]="filterOpen"
+  [style.display]="filterOpen ? 'block' : 'none'"
+  tabindex="-1"
+  (click)="closeFilterPanel()"
+>
+  <div class="modal-dialog modal-dialog-scrollable" (click)="$event.stopPropagation()">
+    <div class="modal-content border border-warning">
+      <div class="modal-header">
+        <h5 class="modal-title">Filters</h5>
+        <button type="button" class="btn-close" (click)="closeFilterPanel()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="checkbox" id="fEmp" [(ngModel)]="useEmployee" />
+          <label class="form-check-label fw-semibold" for="fEmp">Employee name</label>
+          <input class="form-control mt-1" [(ngModel)]="search" [disabled]="!useEmployee" placeholder="Contains…" />
+        </div>
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="checkbox" id="fRole" [(ngModel)]="useRole" />
+          <label class="form-check-label fw-semibold" for="fRole">Role</label>
+          <input class="form-control mt-1" [(ngModel)]="role" [disabled]="!useRole" />
+        </div>
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="checkbox" id="fQual" [(ngModel)]="useQualification" />
+          <label class="form-check-label fw-semibold" for="fQual">Qualification</label>
+          <input class="form-control mt-1" [(ngModel)]="qualification" [disabled]="!useQualification" />
+        </div>
+        <div class="form-check mb-2">
+          <input class="form-check-input" type="checkbox" id="fSal" [(ngModel)]="useSalaryRange" />
+          <label class="form-check-label fw-semibold" for="fSal">Salary range (monthly gross)</label>
+        </div>
+        <div class="row g-2">
+          <div class="col-6">
+            <input type="number" class="form-control" [(ngModel)]="minSalary" [disabled]="!useSalaryRange" placeholder="Min" />
+          </div>
+          <div class="col-6">
+            <input type="number" class="form-control" [(ngModel)]="maxSalary" [disabled]="!useSalaryRange" placeholder="Max" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeFilterPanel()">Cancel</button>
+        <button type="button" class="btn btn-warning text-dark fw-semibold" (click)="applyFilterPanel()">Apply filters</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table id="salarySheetTable" class="table table-sm table-striped align-middle mb-0">
+      <thead class="table-dark text-warning">
+        <tr>
+          <th>Employee</th>
+          <th>Qualification</th>
+          <th>Role</th>
+          <th class="text-end">Daily wage</th>
+          <th class="text-end">Days</th>
+          <th class="text-end">Monthly</th>
+          <th class="text-end">OT hrs</th>
+          <th class="text-end">OT amt</th>
+          <th class="text-end">Advance</th>
+          <th class="text-end">Total</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let r of rows">
+          <td>{{ r.employeeName }}</td>
+          <td>{{ r.qualification || '—' }}</td>
+          <td>{{ r.role || '—' }}</td>
+          <td class="text-end">{{ r.dailyWage | number : '1.2-2' }}</td>
+          <td class="text-end" style="max-width: 90px">
+            <input type="number" class="form-control form-control-sm text-end" [(ngModel)]="r.daysPresent" min="0" max="31" />
+          </td>
+          <td class="text-end">{{ r.dailyWage * r.daysPresent | number : '1.2-2' }}</td>
+          <td class="text-end" style="max-width: 90px">
+            <input type="number" class="form-control form-control-sm text-end" [(ngModel)]="r.otHours" min="0" step="0.25" />
+          </td>
+          <td class="text-end">{{ r.otAmount | number : '1.2-2' }}</td>
+          <td class="text-end" style="max-width: 100px">
+            <input type="number" class="form-control form-control-sm text-end" [(ngModel)]="r.advanceAmount" min="0" step="0.01" />
+          </td>
+          <td class="text-end fw-semibold">{{ r.totalAmount | number : '1.2-2' }}</td>
+          <td class="text-end text-nowrap">
+            <button type="button" class="btn btn-sm btn-primary" [disabled]="busy" (click)="saveRow(r)">Save</button>
+          </td>
+        </tr>
+        <tr *ngIf="rows.length === 0">
+          <td colspan="11" class="text-center text-muted py-4">No rows to display.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="card-footer d-flex justify-content-between" *ngIf="totalCount > 20 && totalPages > 1">
+    <button type="button" class="btn btn-outline-secondary btn-sm" [disabled]="busy || page <= 1" (click)="prevPage()">
+      Previous
+    </button>
+    <button
+      type="button"
+      class="btn btn-outline-secondary btn-sm"
+      [disabled]="busy || page >= totalPages"
+      (click)="nextPage()"
+    >
+      Next
+    </button>
+  </div>
+</div>

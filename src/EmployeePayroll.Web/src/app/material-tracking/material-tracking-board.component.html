@@ -1,0 +1,142 @@
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+  <div>
+    <a [routerLink]="menuPath" class="small text-decoration-none">&larr; {{ boardTitle }}</a>
+    <h1 class="h4 mt-2 mb-0">{{ entityName }}</h1>
+  </div>
+  <div class="d-flex flex-column align-items-stretch align-items-md-end gap-2 ms-md-auto text-md-end w-100 w-md-auto">
+    <div class="d-flex flex-wrap gap-2 justify-content-stretch justify-content-md-end">
+      <button type="button" class="btn btn-outline-dark border-warning" [disabled]="busy" (click)="openFilterPanel()">
+        <span class="fw-semibold">&#9881;</span> Filter
+      </button>
+      <app-export-dropdown
+        [disabled]="busy"
+        [canExport]="!!grid?.rows?.length"
+        tableSelector="#materialTrackingTable"
+        [fileBaseName]="'Material_' + entityName"
+        title="Material Tracking"
+        (excel)="exportExcel()"
+      />
+    </div>
+  </div>
+</div>
+
+<div *ngIf="error" class="alert alert-danger py-2">{{ error }}</div>
+<div *ngIf="success" class="alert alert-success py-2">{{ success }}</div>
+
+<div class="modal-backdrop fade material-blur-backdrop" [class.show]="filterOpen" *ngIf="filterOpen" (click)="closeFilterPanel()"></div>
+<div
+  class="modal fade material-modal-layer"
+  [class.show]="filterOpen"
+  [style.display]="filterOpen ? 'block' : 'none'"
+  tabindex="-1"
+  (click)="closeFilterPanel()"
+>
+  <div class="modal-dialog" (click)="$event.stopPropagation()">
+    <div class="modal-content border border-warning">
+      <div class="modal-header">
+        <h5 class="modal-title">Filters</h5>
+        <button type="button" class="btn-close" (click)="closeFilterPanel()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Month</label>
+          <select class="form-select" [(ngModel)]="month">
+            <option *ngFor="let m of monthNames; let i = index" [ngValue]="i + 1">{{ m }}</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Year</label>
+          <select class="form-select" [(ngModel)]="year">
+            <option *ngFor="let y of yearOptions" [ngValue]="y">{{ y }}</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Search</label>
+          <input
+            class="form-control"
+            [(ngModel)]="search"
+            placeholder="Material, vendor, project, invoice"
+            (keyup.enter)="applyFilters()"
+          />
+        </div>
+        <div class="mb-0" *ngIf="mode === 'project'">
+          <label class="form-label">Vendor</label>
+          <input class="form-control" [(ngModel)]="vendorFilter" (keyup.enter)="applyFilters()" />
+        </div>
+        <div class="mb-0" *ngIf="mode === 'vendor'">
+          <label class="form-label">Project</label>
+          <input class="form-control" [(ngModel)]="projectFilter" (keyup.enter)="applyFilters()" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeFilterPanel()">Cancel</button>
+        <button type="button" class="btn btn-primary" [disabled]="busy" (click)="applyFilters()">Apply</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <aside class="col-lg-3">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-white fw-semibold small">
+        {{ mode === 'project' ? 'Projects' : 'Vendors' }}
+      </div>
+      <div class="list-group list-group-flush board-menu">
+        <button
+          type="button"
+          *ngFor="let n of menuNames"
+          class="list-group-item list-group-item-action"
+          [class.active]="n === entityName"
+          (click)="selectEntity(n)"
+        >
+          {{ n }}
+        </button>
+        <div *ngIf="menuNames.length === 0" class="list-group-item text-muted small">No items yet</div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="col-lg-9">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white fw-semibold">Material tracking table</div>
+      <div class="table-responsive">
+        <table id="materialTrackingTable" class="table table-bordered table-hover mb-0 material-grid">
+          <thead class="table-light">
+            <tr>
+              <th>Material Name</th>
+              <th *ngFor="let col of invoiceHeaders" class="text-end">{{ col }}</th>
+              <th class="text-end">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of grid?.rows ?? []">
+              <td class="fw-medium">{{ row.materialName }}</td>
+              <td *ngFor="let col of invoiceHeaders; let i = index" class="text-end">
+                {{ qtyAt(row, i) ?? '' }}
+              </td>
+              <td class="text-end fw-semibold">{{ row.rowTotal }}</td>
+            </tr>
+            <tr *ngIf="grid && grid.rows.length > 0" class="table-secondary">
+              <td class="fw-bold">TOTAL</td>
+              <td *ngFor="let col of invoiceHeaders"></td>
+              <td class="text-end fw-bold">{{ grid.grandTotal }}</td>
+            </tr>
+            <tr *ngIf="(!grid || grid.rows.length === 0) && !busy">
+              <td [attr.colspan]="(invoiceHeaders.length || 1) + 2" class="text-center text-muted py-4">
+                <ng-container *ngIf="grid?.hint; else defaultEmpty">{{ grid?.hint }}</ng-container>
+                <ng-template #defaultEmpty>
+                  No materials for this period. Upload invoices from the
+                  <a routerLink="/app/invoices">Invoices</a> page, set Project/Vendor on review, then Apply filters for
+                  the upload month ({{ periodLabel }}).
+                </ng-template>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+

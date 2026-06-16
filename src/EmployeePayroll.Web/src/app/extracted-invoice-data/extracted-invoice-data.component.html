@@ -1,0 +1,195 @@
+<div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+<div *ngIf="success" class="alert alert-success">{{ success }}</div>
+
+<div *ngIf="showTable" class="card shadow-sm">
+  <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <span class="fw-semibold">Extracted invoice data</span>
+    <div class="d-flex flex-wrap gap-2">
+      <button type="button" class="btn btn-outline-dark border-warning btn-sm" [disabled]="busy" (click)="openFilterPanel()">
+        <span class="fw-semibold">&#9881;</span> Filter
+      </button>
+      <app-export-dropdown
+        [disabled]="busy"
+        [canExport]="invoices.length > 0"
+        tableSelector="#extractedInvoiceTable"
+        fileBaseName="Invoices"
+        title="Extracted invoice data"
+        (excel)="exportExcel()"
+      />
+    </div>
+  </div>
+  <div class="table-responsive">
+    <table id="extractedInvoiceTable" class="table table-bordered table-hover mb-0 invoice-grid">
+      <thead class="table-light">
+        <tr>
+          <th>Invoice No</th>
+          <th>Date</th>
+          <th>Vendername</th>
+          <th class="text-end">SGST</th>
+          <th class="text-end">CGST</th>
+          <th class="text-end">IGST</th>
+          <th class="text-end">Transportcharges</th>
+          <th class="text-end">Basic Total</th>
+          <th class="text-end">Totalamount</th>
+          <th class="text-end">Project name</th>  
+          <th class="text-end"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of invoices">
+          <td>
+            <button type="button" class="btn btn-link p-0 invoice-no-link" *ngIf="row.invoiceNumber; else fileLink" (click)="openOriginal(row)">
+              {{ row.invoiceNumber }}
+            </button>
+            <ng-template #fileLink>
+              <button type="button" class="btn btn-link p-0 invoice-no-link" (click)="openOriginal(row)">{{ row.originalFileName }}</button>
+            </ng-template>
+          </td>
+          <td>{{ row.invoiceDate || '' }}</td>
+          <td>{{ row.vendorName || '' }}</td>
+          <td class="text-end">{{ formatAmount(row.sgstAmount) }}</td>
+          <td class="text-end">{{ formatAmount(row.cgstAmount) }}</td>
+          <td class="text-end">{{ formatAmount(row.igstAmount) }}</td>
+          <td class="text-end">{{ formatAmount(row.transportCharges) }}</td>
+          <td class="text-end">{{ formatAmount(row.basicTotal) }}</td>
+          <td class="text-end fw-semibold">{{ formatAmount(row.totalAmount) }}</td>
+          <td class="text-end"></td>{{ row.projectName || '' }}</td>
+          <td class="text-end text-nowrap">
+            <button type="button" class="btn btn-sm btn-outline-secondary me-1" (click)="editRow(row)" title="Edit">Edit</button>
+            <button type="button" class="btn btn-sm btn-outline-danger" (click)="remove(row)" title="Delete">x</button>
+          </td>
+        </tr>
+        <tr *ngIf="invoices.length === 0 && !busy">
+          <td colspan="11" class="text-center text-muted py-4">
+            {{ allInvoices.length === 0 ? 'No invoices yet. Upload a file from the Invoices page.' : 'No invoices match the current filters.' }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div *ngIf="filterOpen" class="invoice-blur-backdrop fade show" (click)="closeFilterPanel()"></div>
+<div *ngIf="filterOpen" class="modal fade show invoice-modal-layer" tabindex="-1" style="display: block" role="dialog">
+  <div class="modal-dialog" (click)="$event.stopPropagation()">
+    <div class="modal-content border border-warning">
+      <div class="modal-header">
+        <h5 class="modal-title">Filters</h5>
+        <button type="button" class="btn-close" aria-label="Close" (click)="closeFilterPanel()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Invoice</label>
+          <input class="form-control" [(ngModel)]="invoiceFilter" (keyup.enter)="applyInvoiceFilters()" />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Date</label>
+          <input class="form-control" [(ngModel)]="dateFilter" placeholder="e.g. 18-sep-2024" (keyup.enter)="applyInvoiceFilters()" />
+        </div>
+        <div class="mb-0">
+          <label class="form-label">Vender</label>
+          <input class="form-control" [(ngModel)]="vendorFilter" (keyup.enter)="applyInvoiceFilters()" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" (click)="clearInvoiceFilters()">Clear</button>
+        <button type="button" class="btn btn-secondary" (click)="closeFilterPanel()">Cancel</button>
+        <button type="button" class="btn btn-primary" [disabled]="busy" (click)="applyInvoiceFilters()">Apply</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="reviewOpen && review" class="invoice-blur-backdrop fade show" (click)="cancelReview()"></div>
+<div *ngIf="reviewOpen && review" class="modal fade show invoice-modal-layer" tabindex="-1" style="display: block" role="dialog">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Review extracted invoice</h5>
+        <button type="button" class="btn-close" aria-label="Close" (click)="cancelReview()"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted small mb-3">
+          File: <strong>{{ review.originalFileName }}</strong>
+          <span *ngIf="review.extractionNotes"> — {{ review.extractionNotes }}</span>
+        </p>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Invoice No</label>
+            <input type="text" class="form-control" [(ngModel)]="review.invoiceNumber" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Date</label>
+            <input type="text" class="form-control" [(ngModel)]="review.invoiceDate" placeholder="e.g. 18-sep-2024" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Vendername</label>
+            <input type="text" class="form-control" [(ngModel)]="review.vendorName" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Project name</label>
+            <input type="text" class="form-control" [(ngModel)]="review.projectName" placeholder="For material tracking" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">SGST</label>
+            <input
+              type="text"
+              class="form-control text-end"
+              [ngModel]="review.sgstAmount ?? ''"
+              (ngModelChange)="review.sgstAmount = parseAmount($event)"
+            />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">CGST</label>
+            <input
+              type="text"
+              class="form-control text-end"
+              [ngModel]="review.cgstAmount ?? ''"
+              (ngModelChange)="review.cgstAmount = parseAmount($event)"
+            />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">IGST</label>
+            <input
+              type="text"
+              class="form-control text-end"
+              [ngModel]="review.igstAmount ?? ''"
+              (ngModelChange)="review.igstAmount = parseAmount($event)"
+            />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Transportcharges</label>
+            <input
+              type="text"
+              class="form-control text-end"
+              [ngModel]="review.transportCharges ?? ''"
+              (ngModelChange)="review.transportCharges = parseAmount($event)"
+            />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Basic Total</label>
+            <input
+              type="text"
+              class="form-control text-end"
+              [ngModel]="review.basicTotal ?? ''"
+              (ngModelChange)="review.basicTotal = parseAmount($event)"
+            />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Totalamount</label>
+            <input
+              type="text"
+              class="form-control text-end fw-semibold"
+              [ngModel]="review.totalAmount ?? ''"
+              (ngModelChange)="review.totalAmount = parseAmount($event)"
+            />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" (click)="cancelReview()">Close</button>
+        <button type="button" class="btn btn-primary" [disabled]="busy" (click)="saveReview()">Save invoice</button>
+      </div>
+    </div>
+  </div>
+</div>

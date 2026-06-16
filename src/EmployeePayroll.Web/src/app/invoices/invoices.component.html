@@ -1,0 +1,30 @@
+<div class="mb-3">
+  <h1 class="h3 mb-1">Invoice upload</h1>
+</div>
+
+<div *ngIf="error" class="alert alert-danger py-2 small mb-2">{{ error }}</div>
+<div *ngIf="duplicate" class="alert alert-warning py-2 small mb-2">{{ duplicate }}</div>
+<div *ngIf="success" class="alert alert-success py-2 small mb-2">{{ success }}</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-8">
+        <label class="form-label">Invoice file (PDF, DOCX, JPG, PNG — max 10 MB)</label>
+        <input
+          type="file"
+          class="form-control"
+          accept=".pdf,.docx,.jpg,.jpeg,.png,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png"
+          (change)="onFileSelected($event)"
+        />
+      </div>
+      <div class="col-md-4">
+        <button type="button" class="btn btn-primary w-100" [disabled]="busy || !selectedFile" (click)="upload()">
+          Upload &amp; extract
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<app-extracted-invoice-data #invoiceReview [showTable]="false" />

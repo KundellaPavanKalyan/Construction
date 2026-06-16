@@ -1,0 +1,107 @@
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h1 class="h3 mb-0">Employees</h1>
+  <div class="d-flex flex-wrap gap-2">
+    <button type="button" class="btn btn-outline-dark border-warning" (click)="openFilterPanel()">
+      <span class="fw-semibold">&#9881;</span> Filter
+    </button>
+    <button type="button" class="btn btn-primary" (click)="openCreate()">Add employee</button>
+  </div>
+</div>
+
+<div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-striped table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Name</th>
+          <th>Qualification</th>
+          <th>Role</th>
+          <th class="text-end">Daily wage</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let e of employees">
+          <td>{{ e.employeeName }}</td>
+          <td>{{ e.qualification || '—' }}</td>
+          <td>{{ e.role || '—' }}</td>
+          <td class="text-end">{{ e.dailyWage | number : '1.2-2' }}</td>
+          <td class="text-end text-nowrap">
+            <button type="button" class="btn btn-sm btn-outline-primary me-1" (click)="openEdit(e)">Edit</button>
+            <button type="button" class="btn btn-sm btn-outline-danger" (click)="remove(e)">Delete</button>
+          </td>
+        </tr>
+        <tr *ngIf="employees.length === 0">
+          <td colspan="5" class="text-center text-muted py-4">No employees found.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal fade" [class.show]="filterOpen" [style.display]="filterOpen ? 'block' : 'none'" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content border border-warning">
+      <div class="modal-header">
+        <h5 class="modal-title">Filters</h5>
+        <button type="button" class="btn-close" aria-label="Close" (click)="closeFilterPanel()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Search name</label>
+          <input class="form-control" [(ngModel)]="search" (keyup.enter)="applyFilters()" />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Role</label>
+          <input class="form-control" [(ngModel)]="roleFilter" (keyup.enter)="applyFilters()" />
+        </div>
+        <div class="mb-0">
+          <label class="form-label">Qualification</label>
+          <input class="form-control" [(ngModel)]="qualificationFilter" (keyup.enter)="applyFilters()" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" (click)="clearFilters()">Clear</button>
+        <button type="button" class="btn btn-secondary" (click)="closeFilterPanel()">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="applyFilters()">Apply</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div *ngIf="filterOpen" class="modal-backdrop fade show"></div>
+
+<div class="modal fade" [class.show]="modalOpen" [style.display]="modalOpen ? 'block' : 'none'" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ editingId == null ? 'Add employee' : 'Edit employee' }}</h5>
+        <button type="button" class="btn-close" aria-label="Close" (click)="closeModal()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Name *</label>
+          <input class="form-control" [(ngModel)]="form.employeeName" />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Qualification</label>
+          <input class="form-control" [(ngModel)]="form.qualification" />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Role</label>
+          <input class="form-control" [(ngModel)]="form.role" />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Daily wage *</label>
+          <input type="number" class="form-control" [(ngModel)]="form.dailyWage" min="0" step="0.01" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" [disabled]="saving" (click)="save()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div *ngIf="modalOpen" class="modal-backdrop fade show"></div>

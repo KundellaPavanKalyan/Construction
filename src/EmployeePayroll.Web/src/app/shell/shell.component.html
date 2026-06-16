@@ -1,0 +1,32 @@
+<div class="app-shell d-flex flex-column flex-md-row min-vh-100">
+  <aside class="sidebar text-white p-3 d-flex flex-md-column flex-shrink-0">
+    <div class="sidebar-brand fw-bold fs-5 px-2 pb-2">Payroll</div>
+    <hr class="sidebar-divider border-warning opacity-75 my-2" />
+    <nav class="nav flex-md-column flex-row flex-wrap gap-1">
+      <a class="nav-link" routerLink="/app/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Dashboard</a>
+      <a class="nav-link" routerLink="/app/employees" routerLinkActive="active">Employee</a>
+      <a class="nav-link" routerLink="/app/attendance" routerLinkActive="active">Attendance</a>
+      <a class="nav-link" routerLink="/app/invoices" routerLinkActive="active">Invoice</a>
+      <a class="nav-link" routerLink="/app/monthly-tracking" routerLinkActive="active">Monthly tracking</a>
+      <div class="nav-item material-menu">
+        <span class="nav-link material-menu-label">Material tracking</span>
+        <div class="material-submenu">
+          <a class="nav-link submenu-link" routerLink="/app/material-tracking/projects" routerLinkActive="active">
+            Project material tracking
+          </a>
+          <a class="nav-link submenu-link" routerLink="/app/material-tracking/vendors" routerLinkActive="active">
+            Vendor material tracking
+          </a>
+        </div>
+      </div>
+      <a class="nav-link" routerLink="/app/impress" routerLinkActive="active">Impress</a>
+      <a class="nav-link" routerLink="/app/payroll" routerLinkActive="active">Salary sheet</a>
+    </nav>
+    <div class="mt-md-auto pt-3">
+      <button type="button" class="btn btn-outline-warning btn-sm w-100" (click)="auth.logout()">Logout</button>
+    </div>
+  </aside>
+  <main class="flex-grow-1 p-3 p-md-4 bg-body">
+    <router-outlet />
+  </main>
+</div>

@@ -1,0 +1,35 @@
+.board-menu .list-group-item.active {
+  background-color: #f5c518;
+  border-color: #f5c518;
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+.filter-actions .btn {
+  white-space: nowrap;
+}
+
+.material-grid th,
+.material-grid td {
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.modal.show {
+  display: block;
+}
+
+.material-modal-layer.show {
+  z-index: 1055;
+}
+
+.material-blur-backdrop {
+  z-index: 1050;
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.material-blur-backdrop.show {
+  opacity: 1 !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}

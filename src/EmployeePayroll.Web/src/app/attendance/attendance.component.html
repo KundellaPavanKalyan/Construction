@@ -1,0 +1,160 @@
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+  <div>
+    <h1 class="h3 mb-2 text-center fw-bold">Attendance</h1>
+     </div>
+  <div class="d-flex flex-column align-items-stretch align-items-md-end gap-2 ms-md-auto text-md-end w-100 w-md-auto">
+    <div class="d-flex flex-wrap gap-2 justify-content-stretch justify-content-md-end">
+      <button type="button" class="btn btn-outline-secondary" [disabled]="busy" (click)="load()">Reload</button>
+      <button type="button" class="btn btn-primary" [disabled]="busy" (click)="openPeriodPanel()">Pay period</button>
+      <button type="button" class="btn btn-outline-secondary" [disabled]="busy" (click)="openEmployeeModal()">Add employee</button>
+      <button type="button" class="btn btn-warning text-dark fw-semibold" [disabled]="busy" (click)="saveAll()">Save attendance</button>
+      <app-export-dropdown
+        [disabled]="busy"
+        [canExport]="rows.length > 0"
+        tableSelector="#attendanceTable"
+        [fileBaseName]="'Attendance_' + month + '_' + year"
+        title="Attendance"
+        [clientExcel]="true"
+      />
+    </div>
+    <div class="small text-muted border-start border-warning border-3 ps-2 text-start text-md-end">
+      <div><strong>Period:</strong> {{ periodLabel }}</div>
+      <div>{{ rows.length }} employee row(s)</div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+
+<div class="modal-backdrop fade payroll-blur-backdrop" [class.show]="periodOpen" *ngIf="periodOpen" (click)="closePeriodPanel()"></div>
+<div
+  class="modal fade payroll-modal-layer"
+  [class.show]="periodOpen"
+  [style.display]="periodOpen ? 'block' : 'none'"
+  tabindex="-1"
+  role="dialog"
+  (click)="closePeriodPanel()"
+>
+  <div class="modal-dialog modal-dialog-centered" role="document" (click)="$event.stopPropagation()">
+    <div class="modal-content border border-warning border-2">
+      <div class="modal-header">
+        <h5 class="modal-title">Pay period</h5>
+        <button type="button" class="btn-close" aria-label="Close" (click)="closePeriodPanel()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Month</label>
+          <select class="form-select" [(ngModel)]="draftMonth">
+            <option *ngFor="let m of monthNames; let i = index" [ngValue]="i + 1">{{ m }}</option>
+          </select>
+        </div>
+        <div class="mb-0">
+          <label class="form-label">Year</label>
+          <select class="form-select" [(ngModel)]="draftYear">
+            <option *ngFor="let y of yearOptions" [ngValue]="y">{{ y }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closePeriodPanel()">Cancel</button>
+        <button type="button" class="btn btn-primary" [disabled]="busy" (click)="applyPeriodPanel()">Load attendance</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div
+  class="modal-backdrop fade payroll-blur-backdrop"
+  [class.show]="employeeModalOpen"
+  *ngIf="employeeModalOpen"
+  (click)="closeEmployeeModal()"
+></div>
+<div
+  class="modal fade payroll-modal-layer"
+  [class.show]="employeeModalOpen"
+  [style.display]="employeeModalOpen ? 'block' : 'none'"
+  tabindex="-1"
+  (click)="closeEmployeeModal()"
+>
+  <div class="modal-dialog" (click)="$event.stopPropagation()">
+    <div class="modal-content border border-warning">
+      <div class="modal-header">
+        <h5 class="modal-title">Add employee</h5>
+        <button type="button" class="btn-close" (click)="closeEmployeeModal()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-2">
+          <label class="form-label">Name *</label>
+          <input class="form-control" [(ngModel)]="newEmp.employeeName" />
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Qualification</label>
+          <input class="form-control" [(ngModel)]="newEmp.qualification" />
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Role</label>
+          <input class="form-control" [(ngModel)]="newEmp.role" />
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Daily wage *</label>
+          <input type="number" class="form-control" [(ngModel)]="newEmp.dailyWage" min="0" step="0.01" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeEmployeeModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" [disabled]="busy" (click)="addEmployee()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="table-scroll card shadow-sm">
+  <table id="attendanceTable" class="table table-bordered table-sm align-middle mb-0 attendance-table">
+    <thead class="table-dark text-warning">
+      <tr>
+        <th class="sticky-name">Name</th>
+        <th class="sticky-role">Role</th>
+        <th *ngFor="let d of dayNumbers()" class="text-center day-col">{{ d }}</th>
+        <th class="text-center">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <ng-container *ngFor="let r of rows">
+        <tr>
+          <td class="sticky-name bg-body fw-semibold">{{ r.employeeName }}</td>
+          <td class="sticky-role bg-body small">{{ r.role || '—' }}</td>
+          <td *ngFor="let d of dayNumbers()" class="p-0">
+            <select
+              class="form-select form-select-sm border-0 rounded-0 att-select"
+              [ngModel]="getMark(r, d)"
+              (ngModelChange)="setMarkStr(r, d, $event)"
+            >
+              <option value=""></option>
+              <option value="P">P</option>
+              <option value="A">A</option>
+            </select>
+          </td>
+          <td class="text-nowrap">
+            <button type="button" class="btn btn-sm btn-outline-danger" [disabled]="busy" (click)="remove(r)">Delete</button>
+          </td>
+        </tr>
+        <tr class="ot-row">
+          <td class="sticky-name bg-light small text-muted">OT (hrs)</td>
+          <td class="sticky-role bg-light"></td>
+          <td *ngFor="let d of dayNumbers()" class="p-0 bg-light">
+            <input
+              type="number"
+              class="form-control form-control-sm border-0 rounded-0 text-end"
+              min="0"
+              step="0.25"
+              [ngModel]="getOt(r, d)"
+              (ngModelChange)="setOt(r, d, $event)"
+            />
+          </td>
+          <td class="bg-light"></td>
+        </tr>
+      </ng-container>
+    </tbody>
+  </table>
+  <div *ngIf="rows.length === 0 && !busy" class="p-4 text-center text-muted">No rows. Create a payroll month first.</div>
+</div>

@@ -1,0 +1,78 @@
+﻿<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+  <div>
+    <h1 class="h3 mb-2">Monthly tracking</h1>
+  </div>
+  <div class="d-flex flex-wrap gap-2">
+    <button type="button" class="btn btn-outline-secondary" [disabled]="busy" (click)="load()">Reload</button>
+  </div>
+  <div class="w-100 small text-muted"><strong>Period:</strong> {{ periodLabel }}</div>
+</div>
+
+<div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+
+<div class="card shadow-sm">
+  <div class="table-responsive">
+  </div>
+</div>
+
+<div class="modal-backdrop fade track-blur-backdrop" [class.show]="periodOpen" *ngIf="periodOpen" (click)="closePeriodPanel()"></div>
+<div class="modal fade track-modal-layer" [class.show]="periodOpen" [style.display]="periodOpen ? 'block' : 'none'" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered" (click)="$event.stopPropagation()">
+    <div class="modal-content border border-warning border-2">
+      <div class="modal-header">
+        <h5 class="modal-title">Pay period</h5>
+        <button type="button" class="btn-close" (click)="closePeriodPanel()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Month</label>
+          <select class="form-select" [(ngModel)]="draftMonth">
+            <option *ngFor="let m of monthNames; let i = index" [ngValue]="i + 1">{{ m }}</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Year</label>
+          <select class="form-select" [(ngModel)]="draftYear">
+            <option *ngFor="let y of yearOptions" [ngValue]="y">{{ y }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closePeriodPanel()">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="applyPeriodPanel()">Apply</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop fade track-blur-backdrop" [class.show]="modalOpen" *ngIf="modalOpen" (click)="closeModal()"></div>
+<div class="modal fade track-modal-layer" [class.show]="modalOpen" [style.display]="modalOpen ? 'block' : 'none'" tabindex="-1">
+  <div class="modal-dialog" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ editingId ? 'Edit' : 'Add' }} monthly entry</h5>
+        <button type="button" class="btn-close" (click)="closeModal()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Status</label>
+          <select class="form-select" [(ngModel)]="form.status">
+            <option *ngFor="let s of statusOptions" [value]="s">{{ s }}</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Remarks</label>
+          <input class="form-control" [(ngModel)]="form.remarks" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" [disabled]="busy" (click)="save()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="my-4" />
+
+<app-extracted-invoice-data />

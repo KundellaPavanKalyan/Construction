@@ -1,0 +1,8 @@
+.modal.show {
+  display: block;
+}
+
+.modal-backdrop.show {
+  opacity: 0.55;
+  backdrop-filter: blur(3px);
+}

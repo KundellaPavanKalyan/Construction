@@ -1,0 +1,30 @@
+.modal.show {
+  display: block;
+}
+
+.invoice-modal-layer.show {
+  z-index: 1055;
+}
+
+.invoice-blur-backdrop {
+  z-index: 1050;
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.invoice-blur-backdrop.show {
+  opacity: 1 !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.invoice-grid th,
+.invoice-grid td {
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.invoice-no-link {
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

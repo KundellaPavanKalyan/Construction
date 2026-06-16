@@ -1,0 +1,18 @@
+@use "bootstrap/scss/bootstrap" as *;
+
+:root {
+  --cc-black: #111;
+  --cc-yellow: #f5c518;
+}
+
+body {
+  background-color: #f4f5f7;
+}
+
+.table thead th {
+  white-space: nowrap;
+}
+
+.btn-warning {
+  border-color: #d4a50f;
+}

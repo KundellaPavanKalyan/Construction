@@ -1,0 +1,28 @@
+.modal.show {
+  display: block;
+}
+
+.impress-modal-layer.show {
+  z-index: 1055;
+}
+
+.impress-blur-backdrop {
+  z-index: 1050;
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.impress-blur-backdrop.show {
+  opacity: 1 !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.impress-week-input {
+  max-width: 6.5rem;
+  min-width: 5rem;
+}
+
+.impress-grid th,
+.impress-grid td {
+  vertical-align: middle;
+}

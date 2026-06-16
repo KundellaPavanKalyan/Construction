@@ -1,0 +1,37 @@
+<div class="mb-3">
+  <a routerLink="/app/material-tracking" class="small text-decoration-none">&larr; Material Tracking</a>
+  <h1 class="h3 mt-2 mb-1">{{ title }}</h1>
+  <p class="text-muted small mb-0">Select a {{ mode === 'project' ? 'project' : 'vendor' }} to open the material table.</p>
+</div>
+
+<div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-header bg-white fw-semibold">{{ title }}</div>
+  <ul class="list-group list-group-flush" *ngIf="names.length > 0">
+    <li
+      *ngFor="let n of names"
+      class="list-group-item d-flex justify-content-between align-items-center gap-2"
+    >
+      <span class="text-truncate flex-grow-1" [title]="n">{{ n }}</span>
+      <span class="text-nowrap">
+        <button type="button" class="btn btn-sm btn-outline-primary me-1" [disabled]="busy" (click)="open(n)">Open</button>
+        <button type="button" class="btn btn-sm btn-outline-danger" [disabled]="busy" (click)="remove(n, $event)">Delete</button>
+      </span>
+    </li>
+  </ul>
+  <div *ngIf="names.length === 0 && !busy" class="card-body text-muted text-center py-4">
+    No {{ mode === 'project' ? 'projects' : 'vendors' }} yet. Add one below or upload an invoice from the Invoices page.
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <label class="form-label">Add new {{ mode === 'project' ? 'project' : 'vendor' }}</label>
+    <div class="input-group">
+      <input class="form-control" [(ngModel)]="newName" [placeholder]="mode === 'project' ? 'Project name' : 'Vendor name'" (keyup.enter)="addName()" />
+      <button type="button" class="btn btn-primary" [disabled]="busy || !newName.trim()" (click)="addName()">Add</button>
+    </div>
+  </div>
+</div>
+
